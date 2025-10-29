@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>CKD Prediction</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+<div class="page">
+    <header>
+        <h1>Chronic Kidney Disease Prediction</h1>
+        <p>Provide patient laboratory values and symptoms to estimate CKD risk using the trained model.</p>
+    </header>
+
+    {% if errors %}
+        <div class="alert alert-error">
+            <h2>Check your input</h2>
+            <ul>
+                {% for error in errors %}
+                    <li>{{ error }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    {% endif %}
+
+    {% if result %}
+        <div class="alert alert-success">
+            <h2>Prediction</h2>
+            <p><strong>Model output:</strong> {{ result.prediction }}</p>
+            {% if result.probability is not none %}
+                <p><strong>Probability of CKD:</strong> {{ (result.probability * 100) | round(2) }}%</p>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <form method="post" autocomplete="off" novalidate>
+        <div class="form-grid">
+            {% for feature in feature_order %}
+                {% set current_value = defaults.get(feature) %}
+                {% if current_value is none %}
+                    {% set current_value = '' %}
+                {% endif %}
+                <div class="form-field">
+                    <label for="{{ feature }}">{{ feature.replace('_', ' ').title() }}</label>
+                    {% if feature in categories %}
+                        {% set selected_value = current_value.lower() %}
+                        <select id="{{ feature }}" name="{{ feature }}" required>
+                            <option value="" disabled {% if not selected_value %}selected{% endif %}>Select</option>
+                            {% for option in categories[feature] %}
+                                <option value="{{ option }}" {% if selected_value == option %}selected{% endif %}>{{ option.replace('_', ' ').title() }}</option>
+                            {% endfor %}
+                        </select>
+                    {% else %}
+                        <input
+                                id="{{ feature }}"
+                                name="{{ feature }}"
+                                type="number"
+                                step="any"
+                                value="{{ current_value }}"
+                                required
+                        >
+                    {% endif %}
+                </div>
+            {% endfor %}
+        </div>
+        <button type="submit">Predict CKD</button>
+    </form>
+</div>
+</body>
+</html>
